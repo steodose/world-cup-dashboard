@@ -147,43 +147,45 @@ gt_theme_538 <- function(data,...) {
 ## Load data
 
 # kaggle dataset for every international match
-wc_results <- read_csv("https://raw.githubusercontent.com/martj42/international_results/master/results.csv")
+#wc_results <- read_csv("https://raw.githubusercontent.com/martj42/international_results/master/results.csv")
 
 
 # scrape vegasinsider for WC probabilities
 viURL <- "https://www.vegasinsider.com/soccer/odds/world-cup/"
 
-vi_raw <- viURL %>% 
-    rvest:: read_html() %>% 
-    rvest::html_nodes(".page-main-content li") %>%
-    rvest::html_text()
+# vi_raw <- viURL %>% 
+#     rvest:: read_html() %>% 
+#     rvest::html_nodes(".page-main-content li") %>%
+#     rvest::html_text()
+# 
+# vi_clean <- vi_raw %>% 
+#     as_tibble() %>% 
+#     slice(1:2) #only need team win total data from this text
+# 
+# vi_clean <- vi_clean %>% 
+#     extract(value, 
+#             into = c("team", "champ_odds"),
+#             # regex matching for any amount of consecutive non-digits at the start
+#             regex = "(^\\D+)(.*)", 
+#             convert = TRUE
+#     )
+# 
+# vi_clean$team <- str_remove(vi_clean$team, "[+]")
+# vi_clean$team <- str_remove(vi_clean$team, "[-]")
+# 
+# # create implied odds calculation
+# vi_clean <- vi_clean %>% 
+#     type_convert() %>%
+#   mutate(implied_odds = 1-champ_odds/(champ_odds+100))
 
-vi_clean <- vi_raw %>% 
-    as_tibble() %>% 
-    slice(1:2) #only need team win total data from this text
 
-vi_clean <- vi_clean %>% 
-    extract(value, 
-            into = c("team", "champ_odds"),
-            # regex matching for any amount of consecutive non-digits at the start
-            regex = "(^\\D+)(.*)", 
-            convert = TRUE
-    )
+# join odds, groups and flags data
 
-vi_clean$team <- str_remove(vi_clean$team, "[+]")
-vi_clean$team <- str_remove(vi_clean$team, "[-]")
-
-# create implied odds calculation
-vi_clean <- vi_clean %>% 
-    type_convert() %>%
-  mutate(implied_odds = 1-champ_odds/(champ_odds+100))
-
-
-# join groups and flags data
+pre_tourney_odds <- read_csv("https://raw.githubusercontent.com/steodose/world-cup-dashboard/main/Pre-Tournament%20Odds.csv")
 
 groups <- read_csv("Groups.csv")
 
-wc_probs <- left_join(vi_clean, groups, by = c("team" = "Team"))
+wc_probs <- left_join(pre_tourney_odds, groups, by = c("team" = "Team"))
 
 wc_probs <- wc_probs %>%
     mutate(rank = row_number()) %>%
@@ -209,6 +211,9 @@ wc_probs <- wc_probs %>%
 
 # load matches
 matches <- read_csv("https://projects.fivethirtyeight.com/soccer-api/international/2022/wc_matches.csv")
+
+# use this one if 538 ever removes the link above
+# matches <- read_csv("https://raw.githubusercontent.com/steodose/world-cup-dashboard/main/wc_matches.csv")
 
 #create unique match ids
 matches <- matches |> 
@@ -384,7 +389,7 @@ renderValueBox({
 Row
 -----------------------------------------------------------------------
 
-### Latest Vegas Odds {data-width=450}
+### Pre-Tournament Vegas Odds {data-width=450}
     
 ```{r}
 
